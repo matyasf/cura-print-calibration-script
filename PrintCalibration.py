@@ -53,7 +53,7 @@ class PrintCalibration(Script):
                     "minimum_value": "10",
                     "enabled": "calibrate_retraction"
                 },
-                 "calibrate_temp":
+                "calibrate_temperature":
                 {
                     "label": "Calibrate temperature",
                     "description": "Change temperature as Z increases",
@@ -68,7 +68,7 @@ class PrintCalibration(Script):
                     "type": "float",
                     "default_value": 180.0,
                     "minimum_value": "150",
-                    "enabled": "calibrate_temp"
+                    "enabled": "calibrate_temperature"
                 },
                 "temp_end_value":
                 {
@@ -78,7 +78,7 @@ class PrintCalibration(Script):
                     "type": "float",
                     "default_value": 220.0,
                     "minimum_value": "150",
-                    "enabled": "calibrate_temp"
+                    "enabled": "calibrate_temperature"
                 },
                 "temp_test_height":
                 {
@@ -88,7 +88,7 @@ class PrintCalibration(Script):
                     "type": "float",
                     "default_value": 50.0,
                     "minimum_value": "10",
-                    "enabled": "calibrate_temp"
+                    "enabled": "calibrate_temperature"
                 }
             }
         }"""
@@ -96,6 +96,8 @@ class PrintCalibration(Script):
     def execute(self, data):
         if self.getSettingValueByKey("calibrate_retraction"):
             data = self.calibrate_retraction(data)
+        if self.getSettingValueByKey("calibrate_temperature"):
+            data = self.calibrate_temperature(data)
         return data
 
     def calibrate_temperature(self, data):
@@ -105,9 +107,10 @@ class PrintCalibration(Script):
             current_z = self.get_layer_z(layer)
             lines = layer.split("\n")
             for line in lines:
+                modified_gcode += line + "\n"
                 if ";LAYER:1" in line:  # do not mess up initial layers
                     layers_started = True
-                if layers_started and ":LAYER:" in line:
+                if layers_started and ";LAYER:" in line:
                     current_layer_ratio = current_z / self.getSettingValueByKey("temp_test_height")
                     if current_layer_ratio > 1:
                         current_layer_ratio = 1
@@ -115,8 +118,7 @@ class PrintCalibration(Script):
                                    (self.getSettingValueByKey("temp_end_value") -
                                     self.getSettingValueByKey("temp_start_value")) +
                                    self.getSettingValueByKey("temp_start_value"))
-                    modified_gcode += "M104 S" + temp_to_set + "\n"
-                modified_gcode += line + "\n"
+                    modified_gcode += "M104 S" + str(temp_to_set) + " ; temperature, Z height: " + str(current_z) + "\n"
             data[layer_number] = modified_gcode
         return data
 
@@ -153,12 +155,13 @@ class PrintCalibration(Script):
 
     def get_layer_z(self, layer: str) -> int:
         """
-        Calculates the Z height of the layer. It needs to be this way because of the adaptive layers setting
+        Calculates the Z height of the layer.
+        It needs to be this way because adaptive layers/Z hop can change it
         """
         lines = layer.split("\n")
-        layer_z = 0
+        layer_z = 999999
         for line in lines:
             current_z = self.getValue(line, "Z")
             if current_z is not None:
-                min_z = min(current_z, layer_z)
+                layer_z = min(current_z, layer_z)
         return layer_z
