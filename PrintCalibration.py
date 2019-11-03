@@ -18,7 +18,7 @@ class PrintCalibration(Script):
             {
                 "calibrate_retraction":
                 {
-                    "label": "Calibrate retraction",
+                    "label": "Retraction",
                     "description": "Change retraction as Z increases",
                     "type": "bool",
                     "default_value": false
@@ -55,7 +55,7 @@ class PrintCalibration(Script):
                 },
                 "calibrate_temperature":
                 {
-                    "label": "Calibrate temperature",
+                    "label": "Temperature",
                     "description": "Change temperature as Z increases",
                     "type": "bool",
                     "default_value": false
@@ -145,7 +145,7 @@ class PrintCalibration(Script):
                     retract_to_set = current_layer_ratio * (self.getSettingValueByKey("retract_end_value") -
                                                             self.getSettingValueByKey("retract_start_value"))
                     new_retract = current_e + current_retraction - retract_to_set
-                    modified_gcode += self.putValue(line, E=new_retract) + "\n"
+                    modified_gcode += self.putValue(line, E=new_retract) + "; changed E from " + str(current_e) + "\n"
                 else:
                     modified_gcode += line + "\n"
                 if current_e is not None:
