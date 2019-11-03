@@ -1,6 +1,9 @@
 # cura-print-calibration-script
 Post Processing Script for Cura that helps calibrate your printer.
 
+![plugin screenshot](https://i.imgur.com/VUeNXk0.png)
+
+
 Installation: 
 Copy `PrintCalibation.py` to `Cura/plugins/PostProcessingPlugin/scripts` and start Cura.
 
